@@ -1,0 +1,11 @@
+Screens\Settings_Screen.class
+Screens\Search_and_Explaore_Screen.class
+Instagram\Aaqua_assignment\base.class
+Screens\User_Profile_Info_Screen.class
+Screens\Insta_Home_Screen.class
+Screens\Login_Screen.class
+Screens\Signin_Screen.class
+Instagram\Aaqua_assignment\Utilities.class
+resources\Listeners.class
+resources\ExtentReporterNG.class
+Screens\User_profile_Screen.class

@@ -1,0 +1,97 @@
+pipeline {
+   agent any
+
+   stages {
+
+      stage('TEST Development') {
+        steps {
+          echo 'Deploying Application code in TEST Environment...'
+          }
+      }
+
+      stage('TEST Testing') {
+
+        steps {
+          echo 'Preparing setup to execute automation in TEST Environment...'
+          sh 'mkdir -p Automation_Script'
+          dir("Automation_Script") {
+                git branch: "test", url: '<Automation Code git repo>'
+            }
+          }
+
+        steps {
+          echo 'Executing automation in TEST Environment...'		
+	  withMaven(maven : 'maven_3_5_0')		
+          	sh 'mvn test'
+          echo 'Done executing automation in TEST Environment...'
+          } 
+
+        steps {
+          echo 'Verifying automation results in TEST Environment...'
+          sh '<Run Qualification Logic>'
+          echo 'Verification succeed in TEST Environment...'
+          }
+            
+      }
+
+      stage('PROD Development') {
+        try {
+          timeout(time: 120, unit: 'SECONDS') {
+            input{
+              message "Shall we continue with Production Deployment?"
+            }
+          }
+          steps {
+            echo 'Deploying Application code in PROD Environment...'
+              }
+        } catch (err) {
+          echo 'Timed Out waiting for user input. Aborting PROD Deployment'
+        }
+        }
+
+      stage('PROD Testing') {
+
+        steps {
+          echo 'Preparing setup to execute automation in PROD Environment...'
+          sh 'mkdir -p Automation_Script'
+          dir("Automation_Script") {
+                git branch: "prod", url: '<Automation Code git repo>'
+            }
+          }
+
+        steps {
+          echo 'Executing automation in PROD Environment...'
+          withMaven(maven : 'maven_3_5_0')		
+          	sh 'mvn test'
+          echo 'Done executing automation in PROD Environment...'
+          } 
+
+        steps {
+          echo 'Verifying automation results in PROD Environment...'
+          sh '<Run Qualification Logic>'
+          echo 'Verification succeed in PROD Environment...'
+          }
+            
+      }
+    }
+
+    post {
+      always {
+        echo 'End of Pipeline'
+        echo 'Deployment ${env.BUILD_URL} and ${env.JENKINS_URL} resulted in ${currentBuild.currentResult}'
+        deleteDir()
+      }
+      success {
+        echo 'Deployment ${env.JENKINS_URL} Succeed'
+        mail to: $GIT_AUTHOR_EMAIL,
+             subject: "Pipeline: ${currentBuild.fullDisplayName}",
+             body: "${env.BUILD_URL} resulted in ${currentBuild.currentResult}"
+      }
+      failure {
+        echo 'Deployment ${env.JENKINS_URL} Failed'
+        mail to: 'xxx',
+             subject: "Pipeline: ${currentBuild.fullDisplayName}",
+             body: "${env.BUILD_URL} resulted in ${currentBuild.currentResult}"
+      }
+    }
+}
